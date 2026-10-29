@@ -1,0 +1,680 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0B0909">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="pt_BR">
+<meta property="og:title" content="Criando com Claude Code · Fila de espera">
+<meta property="og:description" content="Fila de espera do curso Criando com Claude Code, de Ezequiel Costa. Aprenda a criar páginas de vendas, portfólios, vídeos e motion com IA, do zero ao resultado.">
+<meta name="twitter:card" content="summary">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='32' fill='%230B0909'/%3E%3Ccircle cx='32' cy='32' r='30' fill='none' stroke='%23F5F1EE' stroke-opacity='.5' stroke-width='2'/%3E%3Ctext x='32' y='40' text-anchor='middle' font-family='monospace' font-size='22' font-weight='600' fill='%23F5F1EE'%3E%3E_%3C/text%3E%3C/svg%3E">
+<title>Criando com Claude Code</title>
+<meta name="description" content="Fila de espera do curso Criando com Claude Code, de Ezequiel Costa. Aprenda a criar páginas de vendas, portfólios, vídeos e motion com IA, do zero ao resultado.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&family=Inter+Tight:wght@400;500;600&display=swap">
+<style>
+/* Layout: o post do feed vira página. Prompt de terminal no topo, título gigante em Inter Tight com aparte em serifa itálica,
+   brasas vermelhas desfocadas e grão de filme sobre o preto; seções separadas por filetes finos. Visual único escuro, por escolha. */
+:root{
+  color-scheme: dark;
+  --ink:#0B0909;
+  --ink-raised:#141011;
+  --paper:#F5F1EE;
+  --paper-soft:rgba(245,241,238,.80);
+  --paper-mute:rgba(245,241,238,.64);
+  --rule:rgba(245,241,238,.16);
+  --rule-strong:rgba(245,241,238,.30);
+  --glass:rgba(255,255,255,.07);
+  --glass-line:rgba(255,255,255,.22);
+  --ember:#E3141B;
+  --ember-0:rgba(227,20,27,0);
+  --ember-glow:rgba(227,20,27,.55);
+  --ember-warm:#F24A31;
+  --ember-warm-0:rgba(242,74,49,0);
+  --ember-soft:#F6B4B6;
+  --ember-soft-0:rgba(246,180,182,0);
+  --ember-deep:#2D0405;
+  --ember-deep-0:rgba(45,4,5,0);
+  --tide:#3E5C66;
+  --tide-0:rgba(62,92,102,0);
+  --link:#FFB3A6;
+  --dock-bg:rgba(11,9,9,.86);
+
+  --font-sans:'Inter Tight', 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-serif:'Instrument Serif', Georgia, 'Times New Roman', serif;
+  --font-mono:'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  --wrap:1200px;
+  --gut-l:max(clamp(16px, 4.5vw, 48px), env(safe-area-inset-left, 0px));
+  --gut-r:max(clamp(16px, 4.5vw, 48px), env(safe-area-inset-right, 0px));
+  --section:clamp(80px, 10vw, 136px);
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:var(--ink);
+  color:var(--paper);
+  font-family:var(--font-sans);
+  font-size:17px;
+  line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+  overflow-x:clip;
+}
+a{color:var(--link)}
+a:hover{color:var(--paper)}
+:focus-visible{outline:2px solid var(--ember-soft);outline-offset:4px}
+p{margin:0}
+h1,h2,h3{margin:0;font-weight:600}
+ul,ol{margin:0;padding:0;list-style:none}
+
+/* ---------- estrutura ---------- */
+.band{position:relative;overflow:hidden}
+.wrap{
+  position:relative;z-index:2;
+  width:100%;max-width:calc(var(--wrap) + 96px);margin-inline:auto;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));
+  padding-right:max(16px, env(safe-area-inset-right, 0px));
+}
+@media (min-width:560px){
+  .wrap{padding-left:var(--gut-l);padding-right:var(--gut-r)}
+}
+.grain{
+  position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.09;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+.glow{position:absolute;border-radius:50%;pointer-events:none}
+
+/* ---------- peças da identidade ---------- */
+.badge{
+  width:36px;height:36px;flex:none;border-radius:50%;
+  border:1px solid rgba(245,241,238,.45);
+  display:inline-flex;align-items:center;justify-content:center;
+  font-family:var(--font-mono);font-size:12px;font-weight:500;color:var(--paper);
+}
+.brand{display:inline-flex;align-items:center;gap:12px;color:var(--paper);text-decoration:none}
+.brand:hover{color:var(--paper)}
+.handle{font-size:16px;font-weight:500;letter-spacing:-.01em}
+.mono-label{
+  font-family:var(--font-mono);font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--paper-mute);
+}
+.status{
+  display:inline-flex;align-items:center;gap:10px;
+  padding:9px 15px;border-radius:999px;
+  background:var(--glass);border:1px solid var(--glass-line);
+  -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
+  font-family:var(--font-mono);font-size:11.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--paper);
+  white-space:nowrap;
+}
+.dot{
+  width:8px;height:8px;border-radius:50%;flex:none;background:var(--ember-soft);
+  box-shadow:0 0 0 0 var(--ember-glow);
+  animation:pulse 2.4s ease-out infinite;
+}
+@keyframes pulse{
+  0%{box-shadow:0 0 0 0 var(--ember-glow)}
+  70%{box-shadow:0 0 0 10px var(--ember-0)}
+  100%{box-shadow:0 0 0 0 var(--ember-0)}
+}
+.cross{position:absolute;width:15px;height:15px;pointer-events:none;color:rgba(245,241,238,.38)}
+
+/* botões */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:12px;
+  min-height:56px;padding:16px 26px;border-radius:999px;
+  font-family:var(--font-sans);font-size:17px;font-weight:600;letter-spacing:-.005em;
+  text-decoration:none;transition:transform .2s ease, box-shadow .25s ease, background-color .2s ease;
+}
+.btn svg{flex:none}
+.btn-primary{
+  background:var(--paper);color:var(--ink);
+  box-shadow:0 0 0 1px rgba(255,255,255,.35), 0 20px 60px -14px var(--ember-glow);
+}
+.btn-primary:hover{
+  color:var(--ink);transform:translateY(-2px);
+  box-shadow:0 0 0 1px rgba(255,255,255,.5), 0 26px 80px -12px var(--ember);
+}
+.btn-primary .arrow{transition:transform .2s ease}
+.btn-primary:hover .arrow{transform:translate(2px,-2px)}
+.btn-ghost{
+  background:var(--glass);color:var(--paper);border:1px solid var(--glass-line);
+  -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
+  min-height:50px;padding:13px 22px;font-size:16px;font-weight:500;
+}
+.btn-ghost:hover{color:var(--paper);background:rgba(255,255,255,.12)}
+.cta-note{font-family:var(--font-mono);font-size:12.5px;line-height:1.5;color:var(--paper-mute)}
+
+/* títulos de seção */
+.eyebrow{display:block;margin-bottom:18px}
+.h2{
+  font-size:clamp(38px, 5.6vw, 72px);line-height:1;letter-spacing:-.04em;text-wrap:balance;
+}
+.h2 em, .final-title em{
+  font-family:var(--font-serif);font-style:italic;font-weight:400;letter-spacing:-.01em;font-size:1.06em;
+  color:rgba(245,241,238,.92);
+}
+.section-head{display:grid;gap:22px;margin-bottom:clamp(40px, 6vw, 72px)}
+.section-head .intro{max-width:52ch;color:var(--paper-soft);font-size:clamp(17px, 1.4vw, 19px)}
+@media (min-width:900px){
+  .section-head{grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);align-items:end;column-gap:56px}
+}
+
+/* ---------- hero ---------- */
+.hero{padding-block:24px clamp(64px, 9vw, 112px)}
+.g-tide{left:-18%;top:-12%;width:max(62vw, 420px);height:max(48vw, 360px);background:radial-gradient(closest-side, var(--tide), var(--tide-0));filter:blur(60px);opacity:.55}
+.g-ember{left:24%;top:0;width:max(80vw, 560px);height:max(62vw, 640px);background:radial-gradient(closest-side, var(--ember), var(--ember-0));filter:blur(70px);opacity:.88;animation:drift 18s ease-in-out infinite alternate}
+.g-warm{left:52%;top:6%;width:max(40vw, 300px);height:max(32vw, 280px);background:radial-gradient(closest-side, var(--ember-warm), var(--ember-warm-0));filter:blur(60px);opacity:.7}
+.g-soft{left:60%;top:13%;width:max(20vw, 150px);height:max(15vw, 120px);background:radial-gradient(closest-side, var(--ember-soft), var(--ember-soft-0));filter:blur(46px);opacity:.45}
+.g-deep{left:-12%;top:52%;width:max(92vw, 640px);height:max(70vw, 620px);background:radial-gradient(closest-side, var(--ember-deep), var(--ember-deep-0));filter:blur(80px);opacity:.95}
+@keyframes drift{from{transform:translate3d(0,0,0) scale(1)}to{transform:translate3d(-4%,3%,0) scale(1.06)}}
+
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.topbar-rule{height:1px;background:var(--rule);margin-top:20px}
+
+.stage{position:relative;margin-top:clamp(48px, 8vw, 104px)}
+.prompt-row{display:flex;align-items:center;justify-content:flex-start}
+.scribble{display:none;flex:1 1 auto;max-width:440px;height:auto;margin-right:-2px}
+.prompt{
+  display:inline-flex;align-items:center;gap:10px;max-width:100%;
+  padding:12px 18px;border-radius:22px;
+  background:var(--glass);border:1px solid var(--glass-line);
+  -webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);
+  font-family:var(--font-mono);font-size:clamp(13px, 3.5vw, 17px);line-height:1.35;color:var(--paper);
+}
+.prompt .caret{color:var(--paper-mute)}
+.prompt .typed{min-width:0}
+.cursor{width:.55em;height:1.2em;flex:none;background:rgba(245,241,238,.85);animation:blink 1.05s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+@media (min-width:760px){
+  .prompt-row{justify-content:flex-end;padding-left:4%}
+  .scribble{display:block}
+  .prompt{border-radius:999px;white-space:nowrap;padding:14px 22px}
+}
+
+.title{display:flex;flex-direction:column;align-items:flex-start;margin-top:clamp(28px, 4vw, 40px)}
+.title .serif{
+  font-family:var(--font-serif);font-style:italic;font-weight:400;
+  font-size:clamp(42px, 8.4vw, 108px);line-height:1;letter-spacing:-.01em;color:rgba(245,241,238,.92);
+  padding-left:.06em;
+}
+.title .sans{
+  font-size:clamp(84px, 21vw, 252px);line-height:.86;letter-spacing:-.055em;font-weight:600;color:var(--paper);
+  margin-left:-.035em;
+}
+.title .last{display:flex;align-items:baseline;flex-wrap:wrap;column-gap:clamp(18px, 3vw, 40px);row-gap:14px}
+.tagline{
+  font-family:var(--font-serif);font-style:italic;font-weight:400;
+  font-size:clamp(26px, 4.2vw, 50px);line-height:1;letter-spacing:0;color:var(--paper-soft);
+}
+
+.hero-foot{
+  display:grid;gap:28px;margin-top:clamp(44px, 6vw, 76px);
+  padding-top:28px;border-top:1px solid var(--rule);
+}
+.lede{font-size:clamp(18px, 1.7vw, 22px);line-height:1.5;color:var(--paper-soft);max-width:44ch}
+.lede strong{color:var(--paper);font-weight:500}
+.cta-block{display:grid;gap:14px;justify-items:start}
+@media (min-width:900px){
+  .hero-foot{grid-template-columns:minmax(0,1fr) auto;align-items:end;column-gap:56px}
+  .cta-block{justify-items:end;text-align:right}
+}
+.hero .cross.c1{right:0;top:-34px}
+.hero .cross.c2{left:50%;top:-34px}
+
+/* ---------- conteúdo ---------- */
+.content{padding-block:var(--section)}
+.topics{border-top:1px solid var(--rule)}
+.topic{
+  display:grid;gap:12px;padding-block:28px;border-bottom:1px solid var(--rule);
+}
+.topic h3{font-size:clamp(28px, 3.2vw, 40px);line-height:1.05;letter-spacing:-.035em}
+.topic p{color:var(--paper-soft);max-width:46ch;min-width:0}
+.chip{
+  justify-self:start;display:inline-flex;align-items:baseline;gap:8px;max-width:100%;min-width:0;
+  padding:9px 15px;border-radius:999px;
+  background:var(--glass);border:1px solid var(--glass-line);
+  font-family:var(--font-mono);font-size:13.5px;line-height:1.4;color:var(--paper);
+  transition:border-color .2s ease, background-color .2s ease;
+}
+.chip .caret{color:var(--paper-mute)}
+.topic:hover .chip{border-color:rgba(246,180,182,.55);background:rgba(227,20,27,.12)}
+@media (min-width:900px){
+  .topic{grid-template-columns:minmax(0,.9fr) minmax(0,1.2fr) minmax(0,1fr);align-items:center;column-gap:40px;padding-block:34px}
+  .chip{justify-self:end}
+}
+
+/* ---------- prova ---------- */
+.proof{padding-block:var(--section);border-top:1px solid var(--rule)}
+.g-proof{left:-20%;top:20%;width:max(60vw, 480px);height:max(46vw, 420px);background:radial-gradient(closest-side, var(--tide), var(--tide-0));filter:blur(70px);opacity:.45}
+.g-proof2{right:-14%;top:10%;width:max(44vw, 380px);height:max(40vw, 360px);background:radial-gradient(closest-side, var(--ember), var(--ember-0));filter:blur(80px);opacity:.38}
+.proof-grid{display:grid;gap:48px}
+.proof-copy{display:grid;gap:24px;align-content:start;min-width:0}
+.proof-copy .body{color:var(--paper-soft);font-size:clamp(17px, 1.4vw, 19px);max-width:46ch}
+.stack{font-family:var(--font-mono);font-size:12.5px;letter-spacing:.06em;color:var(--paper-mute)}
+.proof-actions{display:flex;flex-wrap:wrap;align-items:center;gap:16px 22px}
+@media (min-width:960px){
+  .proof-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:center;column-gap:72px}
+}
+.term{
+  min-width:0;border:1px solid var(--rule-strong);border-radius:20px;overflow:hidden;
+  background:linear-gradient(180deg, rgba(24,18,19,.92), rgba(11,9,9,.94));
+  box-shadow:0 40px 120px -40px var(--ember-glow);
+}
+.term-bar{
+  display:flex;justify-content:space-between;align-items:center;gap:12px;
+  padding:14px 20px;border-bottom:1px solid var(--rule);
+  font-family:var(--font-mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--paper-mute);
+}
+.term-bar .left{display:inline-flex;align-items:center;gap:10px;color:var(--paper)}
+.term-bar .badge{width:26px;height:26px;font-size:10px;letter-spacing:0}
+.term-body{padding:24px 22px 26px;font-family:var(--font-mono);font-size:clamp(13.5px, 1.3vw, 15.5px);line-height:1.6;overflow-x:auto}
+.term-body li{display:flex;gap:12px;padding-block:9px;min-width:0}
+.term-body li + li{border-top:1px dashed var(--rule)}
+.term-body .caret{color:var(--ember-soft);flex:none}
+.term-body .live{align-items:center;color:var(--paper-soft)}
+.term-body .live a{overflow-wrap:anywhere}
+.term-body .comment{color:var(--paper-mute)}
+
+/* ---------- fila ---------- */
+.queue{padding-block:var(--section);border-top:1px solid var(--rule)}
+.steps{display:grid;gap:36px;counter-reset:passo}
+.step{display:grid;gap:14px;padding-top:24px;border-top:1px solid var(--rule-strong);align-content:start}
+.step-n{
+  font-family:var(--font-serif);font-style:italic;font-size:clamp(56px, 6vw, 80px);line-height:.9;color:var(--ember-soft);
+}
+.step h3{font-size:24px;line-height:1.15;letter-spacing:-.02em}
+.step p{color:var(--paper-soft);max-width:34ch}
+@media (min-width:860px){.steps{grid-template-columns:repeat(3, minmax(0,1fr));column-gap:40px}}
+
+/* ---------- quem ensina ---------- */
+.about{padding-block:var(--section);border-top:1px solid var(--rule)}
+.about-grid{display:grid;gap:48px}
+.ident{display:grid;gap:22px;justify-items:start;align-content:start}
+.mark{
+  position:relative;width:clamp(132px, 16vw, 188px);height:clamp(132px, 16vw, 188px);border-radius:50%;
+  border:1px solid rgba(245,241,238,.45);display:grid;place-items:center;
+  font-family:var(--font-mono);font-weight:500;font-size:clamp(30px, 3.4vw, 42px);color:var(--paper);
+  isolation:isolate;
+}
+.mark::before{
+  content:"";position:absolute;inset:-30%;border-radius:50%;z-index:-1;
+  background:radial-gradient(closest-side, var(--ember), var(--ember-0));filter:blur(34px);opacity:.75;
+}
+.ident .name{font-size:clamp(28px, 3vw, 36px);line-height:1;letter-spacing:-.03em}
+.about-copy{display:grid;gap:26px;min-width:0}
+.about-copy .body{color:var(--paper-soft);font-size:clamp(17px, 1.4vw, 19px);max-width:52ch}
+.facts{display:grid;gap:22px;margin:0}
+.facts div{border-top:1px solid var(--rule-strong);padding-top:16px;display:grid;gap:6px}
+.facts dt{font-size:clamp(40px, 4.4vw, 58px);line-height:1;font-weight:600;letter-spacing:-.045em;font-variant-numeric:tabular-nums}
+.facts dd{margin:0;color:var(--paper-soft);font-size:15.5px}
+@media (min-width:640px){.facts{grid-template-columns:repeat(2, minmax(0,1fr));column-gap:32px}}
+@media (min-width:900px){.about-grid{grid-template-columns:minmax(0,.7fr) minmax(0,1.3fr);column-gap:72px}}
+
+/* ---------- dúvidas ---------- */
+.faq{padding-block:var(--section);border-top:1px solid var(--rule)}
+.faq-list{border-top:1px solid var(--rule)}
+.faq-list details{border-bottom:1px solid var(--rule)}
+.faq-list summary{
+  list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:24px;
+  padding-block:24px;font-size:clamp(19px, 1.8vw, 23px);font-weight:500;letter-spacing:-.015em;
+}
+.faq-list summary::-webkit-details-marker{display:none}
+.faq-list summary .plus{flex:none;width:34px;height:34px;border-radius:50%;border:1px solid var(--glass-line);display:grid;place-items:center;transition:transform .25s ease, background-color .2s ease}
+.faq-list details[open] summary .plus{transform:rotate(45deg);background:var(--glass)}
+.faq-list summary:hover .plus{background:var(--glass)}
+.faq-list .answer{padding:0 0 26px;color:var(--paper-soft);max-width:62ch}
+@media (min-width:900px){.faq-grid{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);column-gap:72px;align-items:start}.faq-grid .section-head{grid-template-columns:1fr}}
+
+/* ---------- chamada final ---------- */
+.final{padding-block:var(--section) clamp(64px, 8vw, 96px);border-top:1px solid var(--rule)}
+.g-final{left:18%;top:8%;width:max(84vw, 600px);height:max(56vw, 520px);background:radial-gradient(closest-side, var(--ember), var(--ember-0));filter:blur(80px);opacity:.8}
+.g-final2{left:46%;top:18%;width:max(36vw, 300px);height:max(28vw, 240px);background:radial-gradient(closest-side, var(--ember-warm), var(--ember-warm-0));filter:blur(60px);opacity:.6}
+.g-final3{left:-16%;top:-10%;width:max(50vw, 420px);height:max(40vw, 360px);background:radial-gradient(closest-side, var(--tide), var(--tide-0));filter:blur(60px);opacity:.45}
+.final-inner{display:grid;gap:30px;justify-items:start}
+.final-title{display:flex;flex-direction:column;align-items:flex-start}
+.final-title em{font-size:clamp(40px, 7vw, 96px);line-height:1;padding-left:.06em}
+.final-title .sans{font-size:clamp(76px, 16vw, 200px);line-height:.88;letter-spacing:-.055em}
+.final-inner .body{color:var(--paper-soft);font-size:clamp(18px, 1.6vw, 21px);max-width:44ch}
+.final-cta{display:flex;flex-wrap:wrap;align-items:center;gap:16px 22px}
+
+.footer{padding-block:28px;border-top:1px solid var(--rule)}
+.footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:18px 32px}
+.footer small{font-size:14px;color:var(--paper-mute)}
+.footer nav{display:flex;flex-wrap:wrap;gap:8px 22px;font-family:var(--font-mono);font-size:13px}
+.footer nav a{color:var(--paper-soft);text-decoration:none;display:inline-flex;align-items:center;gap:6px;min-height:44px}
+.footer nav a:hover{color:var(--paper)}
+
+/* ---------- barra fixa no celular ---------- */
+.dock{
+  position:fixed;left:0;right:0;bottom:0;z-index:20;
+  padding:12px max(16px, env(safe-area-inset-right, 0px)) calc(12px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+  background:var(--dock-bg);border-top:1px solid var(--rule);
+  -webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);
+  transform:translateY(110%);transition:transform .3s ease;
+}
+.dock.on{transform:none}
+.dock .btn{width:100%}
+@media (min-width:760px){.dock{display:none}}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+}
+</style>
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}img{max-width:100%}</style>
+</head>
+<body>
+<div class="grain" aria-hidden="true"></div>
+
+<!-- ============ HERO ============ -->
+<section class="band hero" aria-labelledby="titulo">
+  <div class="glow g-tide" aria-hidden="true"></div>
+  <div class="glow g-ember" aria-hidden="true"></div>
+  <div class="glow g-warm" aria-hidden="true"></div>
+  <div class="glow g-soft" aria-hidden="true"></div>
+  <div class="glow g-deep" aria-hidden="true"></div>
+
+  <div class="wrap">
+    <header class="topbar">
+      <a class="brand" href="https://www.instagram.com/oezequielcosta/" target="_blank" rel="noopener">
+        <span class="badge" aria-hidden="true">&gt;_</span>
+        <span class="handle">@oezequielcosta</span>
+      </a>
+      <span class="status"><span class="dot" aria-hidden="true"></span>Fila de espera aberta</span>
+    </header>
+    <div class="topbar-rule" aria-hidden="true"></div>
+
+    <div class="stage">
+      <svg class="cross c1" viewBox="0 0 15 15" fill="none" stroke="currentColor" aria-hidden="true"><path d="M7.5 0v15M0 7.5h15"/></svg>
+      <svg class="cross c2" viewBox="0 0 15 15" fill="none" stroke="currentColor" aria-hidden="true"><path d="M7.5 0v15M0 7.5h15"/></svg>
+
+      <div class="prompt-row" aria-hidden="true">
+        <svg class="scribble" viewBox="0 0 480 192" fill="none">
+          <path d="M6 186 C84 186 106 14 226 12 C326 10 338 134 256 136 C180 138 184 44 276 52 C366 60 404 96 480 96" stroke="rgba(245,241,238,.78)" stroke-width="1.6" stroke-linecap="round"/>
+          <circle cx="6" cy="186" r="3.5" fill="#F5F1EE"/>
+        </svg>
+        <p class="prompt"><span class="caret">›</span><span class="typed" id="typed">crie uma página de vendas do zero</span><span class="cursor"></span></p>
+      </div>
+
+      <h1 class="title" id="titulo" aria-label="Criando com Claude Code, do zero ao resultado">
+        <span class="serif">Criando com</span>
+        <span class="sans">Claude</span>
+        <span class="last"><span class="sans">Code</span><span class="tagline">(do zero ao resultado)</span></span>
+      </h1>
+    </div>
+
+    <div class="hero-foot">
+      <p class="lede">Um curso <strong>passo a passo</strong> para usar o Claude Code e tirar do papel páginas de vendas, portfólios, vídeos e animações. Você começa do zero e chega ao resultado publicado.</p>
+      <div class="cta-block">
+        <a class="btn btn-primary" id="cta-hero" href="https://chat.whatsapp.com/GLg9rYwfgsw6O1s7wulDjU" target="_blank" rel="noopener">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.4 8.4 0 0 1 3.8-.9h.5a8.5 8.5 0 0 1 8 8z"/></svg>
+          Entrar na fila de espera
+          <svg class="arrow" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17L17 7"/><path d="M8 7h9v9"/></svg>
+        </a>
+        <p class="cta-note">Comunidade gratuita no WhatsApp · Aviso de abertura em primeira mão</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ O QUE VOCÊ VAI CRIAR ============ -->
+<section class="band content" aria-labelledby="conteudo">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="mono-label eyebrow">O conteúdo</span>
+        <h2 class="h2" id="conteudo">O que você vai <em>aprender a criar</em></h2>
+      </div>
+      <p class="intro">O método é sempre o mesmo: você descreve o que quer em português, o Claude Code constrói, e você ajusta até ficar com a sua cara.</p>
+    </div>
+
+    <ul class="topics">
+      <li class="topic">
+        <h3>Páginas de vendas</h3>
+        <p>Estrutura, texto e design de uma página que apresenta sua oferta e leva à ação, montada e publicada por você.</p>
+        <code class="chip"><span class="caret">›</span>crie uma página de vendas do zero</code>
+      </li>
+      <li class="topic">
+        <h3>Portfólios</h3>
+        <p>Um site próprio para mostrar seus trabalhos, com a sua identidade e sem depender de templates prontos.</p>
+        <code class="chip"><span class="caret">›</span>crie meu portfólio do zero</code>
+      </li>
+      <li class="topic">
+        <h3>Vídeos</h3>
+        <p>Como colocar a IA no seu fluxo de vídeo para ganhar tempo do roteiro à entrega.</p>
+        <code class="chip"><span class="caret">›</span>roteirize um vídeo de 30 segundos</code>
+      </li>
+      <li class="topic">
+        <h3>Motion</h3>
+        <p>Animações e elementos em movimento criados com código, para usar em sites e vídeos.</p>
+        <code class="chip"><span class="caret">›</span>anime o título da minha página</code>
+      </li>
+      <li class="topic">
+        <h3>Prompts</h3>
+        <p>Como escrever pedidos claros para a IA entregar exatamente o que você imaginou.</p>
+        <code class="chip"><span class="caret">›</span>melhore este prompt</code>
+      </li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ PROVA ============ -->
+<section class="band proof" aria-labelledby="prova">
+  <div class="glow g-proof" aria-hidden="true"></div>
+  <div class="glow g-proof2" aria-hidden="true"></div>
+  <div class="wrap proof-grid">
+    <div class="proof-copy">
+      <span class="mono-label">Feito com Claude Code</span>
+      <h2 class="h2" id="prova">Meu portfólio <em>nasceu assim</em></h2>
+      <p class="body">Criei meu portfólio do zero com o Claude Code e coloquei no ar com GitHub e Cloudflare. O curso mostra esse caminho passo a passo, do primeiro pedido ao link funcionando.</p>
+      <div class="proof-actions">
+        <a class="btn btn-ghost" href="https://portfolio.ezequielcosta.workers.dev/" target="_blank" rel="noopener">
+          Ver o portfólio
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17L17 7"/><path d="M8 7h9v9"/></svg>
+        </a>
+        <span class="stack">Claude · GitHub · Cloudflare</span>
+      </div>
+    </div>
+
+    <figure class="term" style="margin:0" aria-label="Os pedidos que levaram o portfólio do zero até o ar">
+      <div class="term-bar">
+        <span class="left"><span class="badge" aria-hidden="true">&gt;_</span>claude code</span>
+        <span>~/portfolio</span>
+      </div>
+      <ol class="term-body">
+        <li><span class="caret" aria-hidden="true">›</span><span>crie meu portfólio do zero</span></li>
+        <li><span class="caret" aria-hidden="true">›</span><span>suba o projeto para o GitHub</span></li>
+        <li><span class="caret" aria-hidden="true">›</span><span>publique no Cloudflare</span></li>
+        <li class="live"><span class="dot" aria-hidden="true"></span><span><span class="comment">no ar em </span><a href="https://portfolio.ezequielcosta.workers.dev/" target="_blank" rel="noopener">portfolio.ezequielcosta.workers.dev</a></span></li>
+      </ol>
+    </figure>
+  </div>
+</section>
+
+<!-- ============ COMO FUNCIONA A FILA ============ -->
+<section class="band queue" aria-labelledby="fila">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="mono-label eyebrow">Fila de espera</span>
+        <h2 class="h2" id="fila">Como funciona <em>a fila</em></h2>
+      </div>
+      <p class="intro">As inscrições ainda não abriram. Enquanto isso, a comunidade no WhatsApp é onde tudo sobre o curso é anunciado primeiro.</p>
+    </div>
+    <ol class="steps">
+      <li class="step">
+        <span class="step-n" aria-hidden="true">1</span>
+        <h3>Entre na comunidade</h3>
+        <p>Toque em “Entrar na fila de espera” e participe da comunidade gratuita no WhatsApp.</p>
+      </li>
+      <li class="step">
+        <span class="step-n" aria-hidden="true">2</span>
+        <h3>Acompanhe os avisos</h3>
+        <p>Novidades sobre o conteúdo e a data de abertura chegam por lá antes de qualquer outro lugar.</p>
+      </li>
+      <li class="step">
+        <span class="step-n" aria-hidden="true">3</span>
+        <h3>Inscreva-se na abertura</h3>
+        <p>Quando as inscrições abrirem, quem está na fila fica sabendo primeiro.</p>
+      </li>
+    </ol>
+  </div>
+</section>
+
+<!-- ============ QUEM ENSINA ============ -->
+<section class="band about" aria-labelledby="quem">
+  <div class="wrap about-grid">
+    <div class="ident">
+      <span class="mark" aria-hidden="true">&gt;_</span>
+      <div>
+        <p class="name">Ezequiel Costa</p>
+        <p class="mono-label" style="margin-top:10px">Filmmaker · Editor de vídeo</p>
+      </div>
+    </div>
+    <div class="about-copy">
+      <span class="mono-label">Quem ensina</span>
+      <h2 class="h2" id="quem">Oi, eu sou o <em>Ezequiel</em></h2>
+      <p class="body">Sou filmmaker e editor de vídeo. Hoje uso o Claude no meu dia a dia de trabalho, da edição às minhas próprias páginas, e foi assim que construí meu portfólio do zero. Neste curso, mostro o processo que eu uso, sem enrolação.</p>
+      <dl class="facts">
+        <div>
+          <dt>11 mi+</dt>
+          <dd>de visualizações em um vídeo que editei</dd>
+        </div>
+        <div>
+          <dt>3 anos</dt>
+          <dd>editando vídeo profissionalmente</dd>
+        </div>
+      </dl>
+      <p><a href="https://www.instagram.com/oezequielcosta/" target="_blank" rel="noopener">Acompanhe no Instagram: @oezequielcosta</a></p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ DÚVIDAS ============ -->
+<section class="band faq" aria-labelledby="duvidas">
+  <div class="wrap faq-grid">
+    <div class="section-head">
+      <div>
+        <span class="mono-label eyebrow">Dúvidas</span>
+        <h2 class="h2" id="duvidas">Perguntas <em>frequentes</em></h2>
+      </div>
+    </div>
+    <div class="faq-list">
+      <details id="faq-programar">
+        <summary>Preciso saber programar?<span class="plus" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M7 1v12M1 7h12"/></svg></span></summary>
+        <p class="answer">Não. A proposta é começar do zero: você descreve o que quer em português, o Claude Code escreve o código, e o curso mostra como pedir, revisar e ajustar até chegar no resultado.</p>
+      </details>
+      <details id="faq-claude">
+        <summary>O que é o Claude Code?<span class="plus" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M7 1v12M1 7h12"/></svg></span></summary>
+        <p class="answer">É a ferramenta de programação com IA da Anthropic. Você conversa com ela em linguagem natural, e ela cria arquivos, escreve código e executa as tarefas dentro do seu projeto.</p>
+      </details>
+      <details id="faq-custo">
+        <summary>Entrar na fila custa alguma coisa?<span class="plus" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M7 1v12M1 7h12"/></svg></span></summary>
+        <p class="answer">Não. A comunidade no WhatsApp é gratuita e você pode sair quando quiser.</p>
+      </details>
+      <details id="faq-data">
+        <summary>Quando o curso abre?<span class="plus" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M7 1v12M1 7h12"/></svg></span></summary>
+        <p class="answer">A data será anunciada primeiro na comunidade. Quem está na fila recebe o aviso antes de todo mundo.</p>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CHAMADA FINAL + RODAPÉ ============ -->
+<div id="fim">
+  <section class="band final" aria-labelledby="final">
+    <div class="glow g-final3" aria-hidden="true"></div>
+    <div class="glow g-final" aria-hidden="true"></div>
+    <div class="glow g-final2" aria-hidden="true"></div>
+    <div class="wrap final-inner">
+      <span class="status"><span class="dot" aria-hidden="true"></span>Inscrições em breve</span>
+      <h2 class="final-title" id="final" aria-label="A fila está aberta">
+        <em>A fila está</em>
+        <span class="sans">aberta.</span>
+      </h2>
+      <p class="body">Entre na comunidade agora e receba o aviso assim que as inscrições do Criando com Claude Code abrirem.</p>
+      <div class="final-cta">
+        <a class="btn btn-primary" href="https://chat.whatsapp.com/GLg9rYwfgsw6O1s7wulDjU" target="_blank" rel="noopener">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.4 8.4 0 0 1 3.8-.9h.5a8.5 8.5 0 0 1 8 8z"/></svg>
+          Entrar na fila de espera
+          <svg class="arrow" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17L17 7"/><path d="M8 7h9v9"/></svg>
+        </a>
+        <p class="cta-note">Gratuito · Pelo WhatsApp</p>
+      </div>
+    </div>
+  </section>
+
+  <footer class="band footer">
+    <div class="wrap">
+      <a class="brand" href="https://www.instagram.com/oezequielcosta/" target="_blank" rel="noopener">
+        <span class="badge" aria-hidden="true">&gt;_</span>
+        <span class="handle">@oezequielcosta</span>
+      </a>
+      <small>© 2026 Ezequiel Costa · Criando com Claude Code</small>
+      <nav aria-label="Links">
+        <a href="https://www.instagram.com/oezequielcosta/" target="_blank" rel="noopener">Instagram ↗</a>
+        <a href="https://portfolio.ezequielcosta.workers.dev/" target="_blank" rel="noopener">Portfólio ↗</a>
+      </nav>
+    </div>
+  </footer>
+</div>
+
+<div class="dock" id="dock" aria-hidden="true">
+  <a class="btn btn-primary" href="https://chat.whatsapp.com/GLg9rYwfgsw6O1s7wulDjU" target="_blank" rel="noopener" tabindex="-1">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.4 8.4 0 0 1 3.8-.9h.5a8.5 8.5 0 0 1 8 8z"/></svg>
+    Entrar na fila de espera
+  </a>
+</div>
+
+<script>
+(function () {
+  // Prompt digitando: o texto inicial já aparece completo; a troca só roda se o movimento estiver liberado.
+  var prompts = [
+    'crie uma página de vendas do zero',
+    'crie meu portfólio do zero',
+    'roteirize um vídeo de 30 segundos',
+    'anime o título da minha página',
+    'melhore este prompt'
+  ];
+  var el = document.getElementById('typed');
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (el && !reduce) {
+    var i = 0;
+    var wait = function (ms) { return new Promise(function (r) { setTimeout(r, ms); }); };
+    var run = async function () {
+      while (true) {
+        await wait(2600);
+        var cur = el.textContent;
+        for (var n = cur.length; n >= 0; n--) { el.textContent = cur.slice(0, n); await wait(22); }
+        await wait(280);
+        i = (i + 1) % prompts.length;
+        var next = prompts[i];
+        for (var k = 1; k <= next.length; k++) { el.textContent = next.slice(0, k); await wait(48 + Math.random() * 40); }
+      }
+    };
+    run();
+  }
+
+  // Barra fixa no celular: aparece depois do primeiro botão e some perto da chamada final.
+  var dock = document.getElementById('dock');
+  var heroCta = document.getElementById('cta-hero');
+  var fim = document.getElementById('fim');
+  if (dock && heroCta && fim && 'IntersectionObserver' in window) {
+    var heroVisible = true, endVisible = false;
+    var update = function () {
+      var on = !heroVisible && !endVisible;
+      dock.classList.toggle('on', on);
+      var link = dock.querySelector('a');
+      if (link) link.tabIndex = on ? 0 : -1;
+      dock.setAttribute('aria-hidden', on ? 'false' : 'true');
+    };
+    new IntersectionObserver(function (es) { heroVisible = es[0].isIntersecting || es[0].boundingClientRect.top > 0; update(); }).observe(heroCta);
+    new IntersectionObserver(function (es) { endVisible = es[0].isIntersecting; update(); }).observe(fim);
+  }
+})();
+</script>
+</body>
+</html>
